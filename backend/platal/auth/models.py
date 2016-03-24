@@ -86,6 +86,16 @@ class Account(models.Model):
             return
         return super(Account, self).save(*args, **kwargs)
 
+    def get_owner(self):
+        return self
+
+    def has_perm(self, perm, obj=None):
+        from django.contrib import auth
+        return any(b.has_perm(self, perm, obj) for b in auth.get_backends())
+
+    def has_perms(self, perms, obj=None):
+        return all(self.has_perm(p, obj) for p in perms)
+
     @property
     def profile(self):
         try:

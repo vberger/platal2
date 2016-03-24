@@ -2,8 +2,8 @@ from django.conf import settings
 from django.db import models
 
 class AccountProfileLink(models.Model):
-    account = models.ForeignKey('auth.Account', db_column='uid', related_name='profile_links', primary_key=True)
-    profile = models.ForeignKey('Profile', db_column='pid', related_name='account_links')
+    account = models.OneToOneField('auth.Account', db_column='uid', related_name='profile_links', primary_key=True)
+    profile = models.OneToOneField('Profile', db_column='pid', related_name='account_links')
     perms = models.CharField(max_length=5)
 
     class Meta:
@@ -46,6 +46,9 @@ class Profile(models.Model):
     medals_pub = models.CharField(max_length=7)
     alias_pub = models.CharField(max_length=7)
 
+    def get_owner(self):
+        return self.accounts.get(perms='owner').account
+
     class Meta:
         managed = settings.PLATAL_MANAGED
         db_table = 'profiles'
@@ -65,6 +68,9 @@ class ProfilePublicName(models.Model):
     firstname_ordinary = models.CharField(max_length=255)
     pseudonym = models.CharField(max_length=255)
 
+    def get_owner(self):
+        return self.profile.get_owner()
+
     class Meta:
         managed = settings.PLATAL_MANAGED
         db_table = 'profile_public_names'
@@ -81,6 +87,9 @@ class ProfilePhoto(models.Model):
     y = models.IntegerField()
     pub = models.CharField(max_length=7)
     last_update = models.DateTimeField()
+
+    def get_owner():
+        return self.profile.get_owner()
 
     class Meta:
         managed = settings.PLATAL_MANAGED
@@ -99,6 +108,9 @@ class ProfileDisplay(models.Model):
     short_name = models.CharField(max_length=255)
     sort_name = models.CharField(max_length=255)
     promo = models.CharField(max_length=255)
+
+    def get_owner():
+        return self.profile.get_owner()
 
     class Meta:
         managed = settings.PLATAL_MANAGED
