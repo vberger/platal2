@@ -1,16 +1,17 @@
 from django import http
+from django.shortcuts import get_object_or_404
 
-from rest_framework import decorators
 from rest_framework import filters
 from rest_framework import reverse as drf_reverse
 from rest_framework import serializers
 from rest_framework import views
 from rest_framework import viewsets
+from rest_framework.decorators import list_route
+from rest_framework.response import Response
 
+from platal.auth import models as auth_models
 from platal.profiles import models
 from platal.profiles import search as psearch
-
-
 
 # Photo
 # =====
@@ -57,16 +58,6 @@ class RawPhotoView(views.APIView):
 # Profile
 # =======
 
-@decorators.api_view()
-def MyProfileView(request):
-    profile = request.user.profile
-    if profile is None:
-        raise http.Http404()
-
-    url = drf_reverse.reverse('api:profile-detail', kwargs={'hrpid': profile.hrpid}, request=request)
-    return http.HttpResponseRedirect(url)
-
-
 class ProfileSerializer(serializers.HyperlinkedModelSerializer):
 
     photo = ProfilePhotoSerializer()
@@ -105,4 +96,9 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'hrpid'
     lookup_value_regex = r'[a-z0-9.-]+'
 
+    @list_route()
+    def me(self, request, *args, **kwargs):
+        me = get_object_or_404(auth_models.Account, pk=request.user.pk)
+        serializer=self.get_serializer(me.profile)
+        return Response(serializer.data)
 
